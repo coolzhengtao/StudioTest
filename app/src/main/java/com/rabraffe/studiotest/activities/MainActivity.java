@@ -15,6 +15,7 @@ import com.lidroid.xutils.view.annotation.ViewInject;
 import com.lidroid.xutils.view.annotation.event.OnClick;
 import com.rabraffe.studiotest.R;
 
+import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends BaseActivity {
@@ -28,9 +29,12 @@ public class MainActivity extends BaseActivity {
         dtAlarm.setHours(tpTime.getCurrentHour());
         dtAlarm.setMinutes(tpTime.getCurrentMinute());
         dtAlarm.setSeconds(0);
-        if(dtAlarm.before(new Date())){
+        if (dtAlarm.before(new Date())) {
             //设置为新的一天
-
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(dtAlarm);
+            calendar.add(Calendar.DATE, 1);
+            dtAlarm = calendar.getTime();
         }
         Intent intent = new Intent(this, AlarmActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, Intent.FILL_IN_ACTION);
