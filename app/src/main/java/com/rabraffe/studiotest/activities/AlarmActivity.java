@@ -1,5 +1,6 @@
 package com.rabraffe.studiotest.activities;
 
+import android.animation.Animator;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -35,6 +36,7 @@ public class AlarmActivity extends BaseActivity {
     Uri uriAlarm;                               //闹钟铃声的URI
     MediaPlayer mediaPlayer;                    //媒体播放器
     AudioManager audioManager;                  //音频管理服务
+    Animator shake;                             //摇晃动画
 
     @OnClick(R.id.btnStopVibrate)
     private void btnStopVibrateClick(View view) {
@@ -51,6 +53,7 @@ public class AlarmActivity extends BaseActivity {
         //关闭传感器
         sensorManager.unregisterListener(listener);
         wakeLock.release();
+        this.finish();
     }
 
     @Override
@@ -107,6 +110,7 @@ public class AlarmActivity extends BaseActivity {
         //亮屏并且解锁
         wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, "lock");
         wakeLock.acquire();
+        //按钮震动
     }
 
     private class SensorValueListener implements SensorEventListener {
