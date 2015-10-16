@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.View;
 import android.widget.Button;
@@ -27,6 +28,8 @@ public class AlarmActivity extends BaseActivity {
 
     Vibrator vibrator;                          //震动控制器
     SensorManager sensorManager;                //传感器管理
+    PowerManager powerManager;                  //电源管理
+    PowerManager.WakeLock wakeLock;             //屏幕锁
     SensorValueListener listener;               //传感器事件
     Sensor sensor;                              //传感器对象
     Uri uriAlarm;                               //闹钟铃声的URI
@@ -47,6 +50,7 @@ public class AlarmActivity extends BaseActivity {
         mediaPlayer.stop();
         //关闭传感器
         sensorManager.unregisterListener(listener);
+        wakeLock.release();
     }
 
     @Override
@@ -69,6 +73,7 @@ public class AlarmActivity extends BaseActivity {
     private void initView() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);         //获取重力感应器
         listener = new SensorValueListener();
         uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);   //获取默认的铃声URI
@@ -80,7 +85,7 @@ public class AlarmActivity extends BaseActivity {
                 mediaPlayer.setLooping(true);
                 mediaPlayer.prepare();
             }
-            } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -99,6 +104,9 @@ public class AlarmActivity extends BaseActivity {
         mediaPlayer.start();
         //启动感应器
         sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        //亮屏并且解锁
+        wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, "lock");
+        wakeLock.acquire();
     }
 
     private class SensorValueListener implements SensorEventListener {

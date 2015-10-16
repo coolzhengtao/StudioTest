@@ -13,7 +13,7 @@ public class AlarmScheme implements Serializable {
     public static final int TYPE_CUSTOM = 0x4;      //自定义
 
 
-    private String name;            //闹钟名称
-    private int type;               //闹钟类型
-
+    private String name;                //闹钟名称
+    private int type;                   //闹钟类型
+    private boolean isVibrateOn;        //是否震动
 }
