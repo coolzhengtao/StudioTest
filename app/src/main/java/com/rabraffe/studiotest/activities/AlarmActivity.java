@@ -1,11 +1,11 @@
 package com.rabraffe.studiotest.activities;
 
 import android.animation.Animator;
+import android.app.KeyguardManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -23,20 +23,22 @@ import com.rabraffe.studiotest.R;
 
 import java.io.IOException;
 
-public class AlarmActivity extends BaseActivity {
+public final class AlarmActivity extends BaseActivity {
     @ViewInject(R.id.btnStopVibrate)
     Button btnStopVibrate;
 
-    Vibrator vibrator;                          //震动控制器
-    SensorManager sensorManager;                //传感器管理
-    PowerManager powerManager;                  //电源管理
-    PowerManager.WakeLock wakeLock;             //屏幕锁
-    SensorValueListener listener;               //传感器事件
-    Sensor sensor;                              //传感器对象
-    Uri uriAlarm;                               //闹钟铃声的URI
-    MediaPlayer mediaPlayer;                    //媒体播放器
-    AudioManager audioManager;                  //音频管理服务
-    Animator shake;                             //摇晃动画
+    private Vibrator vibrator;                          //震动控制器
+    private SensorManager sensorManager;                //传感器管理
+    private PowerManager powerManager;                  //电源管理
+    private PowerManager.WakeLock wakeLock;             //屏幕锁
+    private KeyguardManager keyguardManager;            //屏幕锁管理
+    private SensorValueListener listener;               //传感器事件
+    private Sensor sensor;                              //传感器对象
+    private Uri uriAlarm;                               //闹钟铃声的URI
+    private MediaPlayer mediaPlayer;                    //媒体播放器
+    private AudioManager audioManager;                  //音频管理服务
+    private Animator shake;                             //摇晃动画
+    private boolean isClear;                            //是否释放.
 
     @OnClick(R.id.btnStopVibrate)
     private void btnStopVibrateClick(View view) {
@@ -48,12 +50,15 @@ public class AlarmActivity extends BaseActivity {
      * 关闭闹钟
      */
     private void alarmClockOff() {
-        vibrator.cancel();
-        mediaPlayer.stop();
-        //关闭传感器
-        sensorManager.unregisterListener(listener);
-        wakeLock.release();
-        this.finish();
+        if (!isClear) {
+            vibrator.cancel();
+            mediaPlayer.stop();
+            //关闭传感器
+            sensorManager.unregisterListener(listener);
+            wakeLock.release();
+            isClear = true;
+            this.finish();
+        }
     }
 
     @Override
@@ -77,6 +82,7 @@ public class AlarmActivity extends BaseActivity {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);         //获取重力感应器
         listener = new SensorValueListener();
         uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);   //获取默认的铃声URI
@@ -97,22 +103,19 @@ public class AlarmActivity extends BaseActivity {
     private void alarmClockOn() {
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         long[] fVibrate = new long[]{1000, 2000};
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            AudioAttributes audioAttributes = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build();
-            vibrator.vibrate(fVibrate, 0, audioAttributes);
-        } else {
-            vibrator.vibrate(fVibrate, 0);
-        }
+        vibrator.vibrate(fVibrate, 0);
         //启动铃声
         mediaPlayer.start();
         //启动感应器
         sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
         //亮屏并且解锁
+        keyguardManager.newKeyguardLock("").disableKeyguard();
         wakeLock = powerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, "lock");
         wakeLock.acquire();
         //按钮震动
     }
 
+    //传感器监听类
     private class SensorValueListener implements SensorEventListener {
         float mLast;
         float value;
