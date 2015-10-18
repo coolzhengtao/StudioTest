@@ -16,4 +16,5 @@ public class AlarmScheme implements Serializable {
     private String name;                //闹钟名称
     private int type;                   //闹钟类型
     private boolean isVibrateOn;        //是否震动
+
 }

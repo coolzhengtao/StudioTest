@@ -20,8 +20,12 @@ import com.lidroid.xutils.ViewUtils;
 import com.lidroid.xutils.view.annotation.ViewInject;
 import com.lidroid.xutils.view.annotation.event.OnClick;
 import com.rabraffe.studiotest.R;
+import com.rabraffe.studiotest.utils.NotifierUtil;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public final class AlarmActivity extends BaseActivity {
     @ViewInject(R.id.btnStopVibrate)
@@ -37,8 +41,10 @@ public final class AlarmActivity extends BaseActivity {
     private Uri uriAlarm;                               //闹钟铃声的URI
     private MediaPlayer mediaPlayer;                    //媒体播放器
     private AudioManager audioManager;                  //音频管理服务
-    private Animator shake;                             //摇晃动画
     private boolean isClear;                            //是否释放.
+
+    private Date dtStart;                               //闹钟开始的时间
+    private Date dtEnd;                                 //闹钟结束的时间
 
     @OnClick(R.id.btnStopVibrate)
     private void btnStopVibrateClick(View view) {
@@ -51,6 +57,10 @@ public final class AlarmActivity extends BaseActivity {
      */
     private void alarmClockOff() {
         if (!isClear) {
+            dtEnd = new Date();
+            long lTimeDiff = dtEnd.getTime() - dtStart.getTime();
+            float dSeconds = lTimeDiff / 1000.0f;
+            NotifierUtil.ShowToast(this, String.format("使用了%f秒", dSeconds), false);
             vibrator.cancel();
             mediaPlayer.stop();
             //关闭传感器
@@ -101,6 +111,8 @@ public final class AlarmActivity extends BaseActivity {
 
     //打开闹钟
     private void alarmClockOn() {
+        //开始计时
+        dtStart = new Date();
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         long[] fVibrate = new long[]{1000, 2000};
         vibrator.vibrate(fVibrate, 0);
