@@ -10,8 +10,11 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- 解锁权限 -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <!-- 悬浮窗口权限 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
+        android:name=".application.BaseApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -38,7 +41,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package com.rabraffe.studiotest.activities;
 
-import android.animation.Animator;
 import android.app.KeyguardManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -14,17 +13,18 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 
 import com.lidroid.xutils.ViewUtils;
 import com.lidroid.xutils.view.annotation.ViewInject;
 import com.lidroid.xutils.view.annotation.event.OnClick;
 import com.rabraffe.studiotest.R;
+import com.rabraffe.studiotest.entities.AlarmScheme;
+import com.rabraffe.studiotest.entities.Alarms;
 import com.rabraffe.studiotest.utils.NotifierUtil;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 public final class AlarmActivity extends BaseActivity {
@@ -41,6 +41,7 @@ public final class AlarmActivity extends BaseActivity {
     private Uri uriAlarm;                               //闹钟铃声的URI
     private MediaPlayer mediaPlayer;                    //媒体播放器
     private AudioManager audioManager;                  //音频管理服务
+    private WindowManager windowManager;                //Window服务
     private boolean isClear;                            //是否释放.
 
     private Date dtStart;                               //闹钟开始的时间
@@ -48,8 +49,7 @@ public final class AlarmActivity extends BaseActivity {
 
     @OnClick(R.id.btnStopVibrate)
     private void btnStopVibrateClick(View view) {
-        if (vibrator.hasVibrator())
-            alarmClockOff();
+        alarmClockOff();
     }
 
     /**
@@ -66,6 +66,8 @@ public final class AlarmActivity extends BaseActivity {
             //关闭传感器
             sensorManager.unregisterListener(listener);
             wakeLock.release();
+            //设置下一个闹钟
+            Alarms.getInstance().setNextAlarm(this);
             isClear = true;
             this.finish();
         }
@@ -93,6 +95,7 @@ public final class AlarmActivity extends BaseActivity {
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);         //获取重力感应器
         listener = new SensorValueListener();
         uriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);   //获取默认的铃声URI
@@ -111,6 +114,8 @@ public final class AlarmActivity extends BaseActivity {
 
     //打开闹钟
     private void alarmClockOn() {
+        //关闭当前闹钟
+        Alarms.getInstance().disableAlarm(getIntent().getStringExtra("uuid"));
         //开始计时
         dtStart = new Date();
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
